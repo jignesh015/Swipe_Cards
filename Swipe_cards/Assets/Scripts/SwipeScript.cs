@@ -8,14 +8,20 @@ public class SwipeScript : MonoBehaviour
     public float swipeTime = 0.5f;
     public float minSwipeDistance = 50f;
 
+    public GameObject touchIcon;
+
+    public Animator swipeAnimator;
+
     private float swipeStartTime;
     private float swipeEndTime;
     private float swipeDistance;
 
     private Vector3 swipeStartPos;
+    private Vector3 swipeMovePos;
     private Vector3 swipeEndPos;
 
     private bool touchCardFlag = false;
+    private string swipeDirection;
 
     // Start is called before the first frame update
     void Start()
@@ -35,30 +41,71 @@ public class SwipeScript : MonoBehaviour
                 {
                     swipeStartTime = Time.time;
                     swipeStartPos = cardTouch.position;
+
+                    touchIcon.SetActive(true);
+                    
                 }
+
+                touchIcon.transform.position = cardTouch.position;
+
+                //Debug.Log(cardTouch.position);
+                if (swipeStartPos.x > cardTouch.position.x)
+                {
+                    SwipeLeft();
+                }
+                else if (swipeStartPos.x < cardTouch.position.x)
+                {
+                    SwipeRight();
+                }
+
+                //if (cardTouch.phase == TouchPhase.Moved)
+                //{
+                //    swipeMovePos = cardTouch.position;
+                //    if (swipeStartPos.x > swipeMovePos.x)
+                //    {
+                //        SwipeLeft();
+                //    }
+                //    else if (swipeStartPos.x < swipeMovePos.x) {
+                //        SwipeRight();
+                //    }
+                //}
 
                 if (cardTouch.phase == TouchPhase.Ended)
                 {
-                    swipeEndTime = Time.time;
-                    swipeEndPos = cardTouch.position;
-
-                    swipeDistance = (swipeEndPos - swipeStartPos).magnitude;
-                    Debug.Log(swipeDistance);
-
-                    if (swipeDistance > minSwipeDistance)
-                    {
-                        Swipe();
-                    }
+                    touchIcon.SetActive(false);
 
                     touchCardFlag = false;
                 }
             }
             
         }
+
+        if (!touchCardFlag)
+        {
+            if (swipeDirection == "left") {
+                swipeAnimator.SetBool("SwipeLeftComplete", true);
+                swipeAnimator.SetBool("SwipeLeftFlag", false);
+            }else if (swipeDirection == "right")
+            {
+                swipeAnimator.SetBool("SwipeRightComplete", true);
+                swipeAnimator.SetBool("SwipeRightFlag", false);
+            }
+        }
     }
 
-    private void Swipe() {
-        Debug.Log("Swipe");
+    private void SwipeLeft()
+    {
+        swipeDirection = "left";
+        swipeAnimator.SetBool("SwipeLeftFlag", true);
+        swipeAnimator.SetBool("SwipeRightFlag", false);
+
+        
+    }
+
+    private void SwipeRight() {
+        swipeDirection = "right";
+        swipeAnimator.SetBool("SwipeRightFlag", true);
+        swipeAnimator.SetBool("SwipeLeftFlag", false);
     }
 
     public void CrossClick() {
