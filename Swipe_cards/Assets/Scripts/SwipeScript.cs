@@ -48,7 +48,6 @@ public class SwipeScript : MonoBehaviour
     private string swipeDirection;
     private bool swipeCompleteFlag = false;
     private int IKnowCounter;
-    private bool fileSaved = false;
 
     // Start is called before the first frame update
     void Start()
