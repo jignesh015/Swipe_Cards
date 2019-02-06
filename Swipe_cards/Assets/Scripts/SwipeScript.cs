@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -10,13 +11,19 @@ public class SwipeScript : MonoBehaviour
     public GameObject frontCardObj;
     public GameObject backCardObj;
     public GameObject canvas;
-    public GameObject touchIcon;
+    public GameObject touchIconObj;
     public List<Sprite> cardSprites;
+
+    //Text variables
+    public GameObject IDontKnowTitle;
+    public TextMeshProUGUI IDontKnowScore;
+    public TextMeshProUGUI IKnowScore;
 
     //Private game variables
     private Animator swipeAnimator;
     private GameObject frontCard;
     private GameObject backCard;
+    private GameObject touchIcon;
     private Vector3 swipeStartPos;
     private Vector3 swipeMovePos;
     private Vector3 swipeEndPos;
@@ -26,10 +33,11 @@ public class SwipeScript : MonoBehaviour
     private Image backCardSprite;
     private List<Sprite> dontKnowCards = new List<Sprite>();
 
-    //Private flags
+    //Private flags & counters
     private bool touchCardFlag = false;
     private string swipeDirection;
     private bool swipeCompleteFlag = false;
+    private int IKnowCounter = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -68,6 +76,7 @@ public class SwipeScript : MonoBehaviour
                     touchCardFlag = false;
                 }
             }
+
             
         }
 
@@ -87,6 +96,9 @@ public class SwipeScript : MonoBehaviour
                 swipeAnimator.SetBool("SwipeRightComplete", true);
                 swipeAnimator.SetBool("SwipeRightFlag", false);
                 swipeCompleteFlag = true;
+
+                //Update counter
+                IKnowCounter += 1;
                 StartCoroutine(SwipeComplete());
             }
         }
@@ -111,6 +123,8 @@ public class SwipeScript : MonoBehaviour
             frontCardSprite.sprite = cardSprites[0];
             
             swipeAnimator = frontCard.GetComponent<Animator>();
+
+            touchIcon = Instantiate(touchIconObj, canvas.transform);
         }
         else {
             CheckDontKnowCards();
@@ -139,6 +153,10 @@ public class SwipeScript : MonoBehaviour
 
         cardSprites.RemoveAt(0);
 
+        //Update score
+        IDontKnowScore.text = dontKnowCards.Count.ToString();
+        IKnowScore.text = IKnowCounter.ToString();
+
         InstatiateCards();
 
     }
@@ -146,6 +164,7 @@ public class SwipeScript : MonoBehaviour
     private void CheckDontKnowCards() {
         if (dontKnowCards.Count > 0)
         {
+            IDontKnowTitle.SetActive(true);
             cardSprites = dontKnowCards;
             InstatiateCards();
         }
@@ -155,6 +174,7 @@ public class SwipeScript : MonoBehaviour
     }
 
     private void NoCardsLeft() {
+        IDontKnowTitle.SetActive(false);
         Debug.Log(dontKnowCards.Count);
     }
 
