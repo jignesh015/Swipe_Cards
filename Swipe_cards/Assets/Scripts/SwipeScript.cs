@@ -11,6 +11,7 @@ public class SwipeScript : MonoBehaviour
     public GameObject frontCardObj;
     public GameObject backCardObj;
     public GameObject canvas;
+    public GameObject gameOverCanvas;
     public GameObject touchIconObj;
     public List<Sprite> cardSprites;
 
@@ -38,6 +39,8 @@ public class SwipeScript : MonoBehaviour
     private string swipeDirection;
     private bool swipeCompleteFlag = false;
     private int IKnowCounter = 0;
+    private bool crossClicked = false;
+    private bool tickClicked = false;
 
     // Start is called before the first frame update
     void Start()
@@ -73,7 +76,9 @@ public class SwipeScript : MonoBehaviour
                 if (cardTouch.phase == TouchPhase.Ended)
                 {
                     touchIcon.SetActive(false);
+                    Destroy(touchIcon);
                     touchCardFlag = false;
+
                 }
             }
 
@@ -86,6 +91,7 @@ public class SwipeScript : MonoBehaviour
                 swipeAnimator.SetBool("SwipeLeftComplete", true);
                 swipeAnimator.SetBool("SwipeLeftFlag", false);
                 swipeCompleteFlag = true;
+                swipeDirection = "";
 
                 //Add left swiped card to Don't know list
                 dontKnowCards.Add(cardSprites[0]);
@@ -96,8 +102,9 @@ public class SwipeScript : MonoBehaviour
                 swipeAnimator.SetBool("SwipeRightComplete", true);
                 swipeAnimator.SetBool("SwipeRightFlag", false);
                 swipeCompleteFlag = true;
+                swipeDirection = "";
 
-                //Update counter
+                //Update right swipe counter
                 IKnowCounter += 1;
                 StartCoroutine(SwipeComplete());
             }
@@ -124,7 +131,6 @@ public class SwipeScript : MonoBehaviour
             
             swipeAnimator = frontCard.GetComponent<Animator>();
 
-            touchIcon = Instantiate(touchIconObj, canvas.transform);
         }
         else {
             CheckDontKnowCards();
@@ -148,8 +154,11 @@ public class SwipeScript : MonoBehaviour
     IEnumerator SwipeComplete() {
         yield return new WaitForSeconds(0.35f);
 
+        touchCardFlag = false;
+
         Destroy(frontCard);
         Destroy(backCard);
+        Destroy(touchIcon);
 
         cardSprites.RemoveAt(0);
 
@@ -158,7 +167,7 @@ public class SwipeScript : MonoBehaviour
         IKnowScore.text = IKnowCounter.ToString();
 
         InstatiateCards();
-
+        
     }
 
     private void CheckDontKnowCards() {
@@ -174,26 +183,44 @@ public class SwipeScript : MonoBehaviour
     }
 
     private void NoCardsLeft() {
-        IDontKnowTitle.SetActive(false);
-        Debug.Log(dontKnowCards.Count);
+        touchCardFlag = false;
+        swipeCompleteFlag = true;
+        Destroy(canvas);
+        gameOverCanvas.SetActive(true);
     }
 
+
     public void CrossClick() {
-        Debug.Log("Cross clicked");
+        Debug.Log("Clicked cross");
+        touchCardFlag = false;
+        swipeCompleteFlag = false;
+        swipeAnimator.SetBool("SwipeLeftFlag", true);
+        swipeAnimator.SetBool("SwipeRightFlag", false);
+
+        StartCoroutine(SetSwipeDirection("left"));
     }
 
     public void TickClick() {
-        Debug.Log("Tick Clicked");
+        touchCardFlag = false;
+        swipeCompleteFlag = false;
+        swipeAnimator.SetBool("SwipeRightFlag", true);
+        swipeAnimator.SetBool("SwipeLeftFlag", false);
+
+        StartCoroutine(SetSwipeDirection("right"));
+    }
+
+    IEnumerator SetSwipeDirection(string direction){
+        yield return new WaitForSeconds(0.32f);
+        swipeDirection = direction;
     }
 
     public void TouchEnterCard() {
-        //Debug.Log("Touch enter");
+        Destroy(touchIcon);
+        touchIcon = Instantiate(touchIconObj, canvas.transform);
         touchCardFlag = true;
         swipeCompleteFlag = false;
     }
 
     public void TouchExitCard() {
-        //Debug.Log("Touch Exit");
-        //touchCardFlag = false;
     }
 }
