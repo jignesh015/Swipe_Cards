@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class SwipeScript : MonoBehaviour
 {
@@ -12,19 +13,26 @@ public class SwipeScript : MonoBehaviour
     public GameObject backCardObj;
     public GameObject canvas;
     public GameObject gameOverCanvas;
-    public GameObject touchIconObj;
-    public List<Sprite> cardSprites;
+
+    //Sprite variables
+    public List<Sprite> cardSpritesList;
+    public Sprite tickSprite;
+    public Sprite crossSprite;
 
     //Text variables
     public GameObject IDontKnowTitle;
     public TextMeshProUGUI IDontKnowScore;
     public TextMeshProUGUI IKnowScore;
 
+    //Sprite name array
+    public string[] cardSpriteName;
+    public string[] dontKnowSpriteName;
+
+
     //Private game variables
     private Animator swipeAnimator;
     private GameObject frontCard;
     private GameObject backCard;
-    private GameObject touchIcon;
     private Vector3 swipeStartPos;
     private Vector3 swipeMovePos;
     private Vector3 swipeEndPos;
@@ -32,20 +40,24 @@ public class SwipeScript : MonoBehaviour
     private Vector3 backCardPos;
     private Image frontCardSprite;
     private Image backCardSprite;
+    private List<Sprite> cardSprites = new List<Sprite>();
     private List<Sprite> dontKnowCards = new List<Sprite>();
 
     //Private flags & counters
     private bool touchCardFlag = false;
     private string swipeDirection;
     private bool swipeCompleteFlag = false;
-    private int IKnowCounter = 0;
-    private bool crossClicked = false;
-    private bool tickClicked = false;
+    private int IKnowCounter;
+    private bool fileSaved = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        InstatiateCards();
+        //dontKnowSpriteName = new string[20];
+        //Check for saved Data
+        CheckSavedData();
+
+        //InstatiateCards();
     }
 
     // Update is called once per frame
@@ -59,11 +71,9 @@ public class SwipeScript : MonoBehaviour
                 if (cardTouch.phase == TouchPhase.Began)
                 {
                     swipeStartPos = cardTouch.position;
-                    touchIcon.SetActive(true);
                     
                 }
 
-                touchIcon.transform.position = cardTouch.position;
                 if (swipeStartPos.x > cardTouch.position.x)
                 {
                     SwipeLeft();
@@ -75,8 +85,6 @@ public class SwipeScript : MonoBehaviour
 
                 if (cardTouch.phase == TouchPhase.Ended)
                 {
-                    touchIcon.SetActive(false);
-                    Destroy(touchIcon);
                     touchCardFlag = false;
 
                 }
@@ -105,11 +113,19 @@ public class SwipeScript : MonoBehaviour
                 swipeDirection = "";
 
                 //Update right swipe counter
-                IKnowCounter += 1;
+                IKnowCounter = IKnowCounter + 1;
                 StartCoroutine(SwipeComplete());
             }
         }
     }
+
+    //private void LateUpdate()
+    //{
+    //    if (dontKnowCards.Count > 0) {
+    //        dontKnowSpriteName[0] = dontKnowCards[0].name;
+    //    }
+        
+    //}
 
     private void InstatiateCards() {
 
@@ -142,13 +158,17 @@ public class SwipeScript : MonoBehaviour
         swipeDirection = "left";
         swipeAnimator.SetBool("SwipeLeftFlag", true);
         swipeAnimator.SetBool("SwipeRightFlag", false);
-        
+
+        frontCardSprite.sprite = crossSprite;
+
     }
 
     private void SwipeRight() {
         swipeDirection = "right";
         swipeAnimator.SetBool("SwipeRightFlag", true);
         swipeAnimator.SetBool("SwipeLeftFlag", false);
+
+        frontCardSprite.sprite = tickSprite;
     }
 
     IEnumerator SwipeComplete() {
@@ -158,7 +178,6 @@ public class SwipeScript : MonoBehaviour
 
         Destroy(frontCard);
         Destroy(backCard);
-        Destroy(touchIcon);
 
         cardSprites.RemoveAt(0);
 
@@ -166,8 +185,89 @@ public class SwipeScript : MonoBehaviour
         IDontKnowScore.text = dontKnowCards.Count.ToString();
         IKnowScore.text = IKnowCounter.ToString();
 
+        UpdateSavedData();
+
         InstatiateCards();
         
+    }
+
+    private void UpdateSavedData() {
+        cardSpriteName = new string[20];
+        dontKnowSpriteName = new string[20];
+
+        //Save dont know cards
+        if (dontKnowCards.Count > 0) {
+            for (var i = 0; i < dontKnowCards.Count; i++) {
+                dontKnowSpriteName[i] = dontKnowCards[i].name;
+            }
+        }
+
+        //save remaining cards
+        if (cardSprites.Count > 0)
+        {
+            for (var i = 0; i < cardSprites.Count; i++)
+            {
+                cardSpriteName[i] = cardSprites[i].name;
+            }
+        }
+
+        if (cardSpriteName.Length > 0) {
+            Debug.Log(cardSpriteName[0]);
+        }
+
+        SaveScript.SaveData(this);
+    }
+
+    private void CheckSavedData() {
+        SavedData swipeData = SaveScript.LoadData();
+        if (swipeData == null)
+        {
+            cardSprites = cardSpritesList;
+            IKnowCounter = 0;
+            InstatiateCards();
+        }
+        else {
+            Debug.Log(swipeData.cardSpriteName.Length);
+            Debug.Log(swipeData.dontKnowSpriteName.Length);
+
+            //Fetch cards sprite
+            for (var i = 0; i < swipeData.cardSpriteName.Length; i++) {
+                Debug.Log(swipeData.cardSpriteName[i]);
+                if (swipeData.cardSpriteName[i] == null) {
+                    break;
+                }
+                for (var j = 0; j < cardSpritesList.Count; j++) {
+                    if (cardSpritesList[j].name == swipeData.cardSpriteName[i]) {
+                        cardSprites.Add(cardSpritesList[j]);
+                    }
+                }
+            }
+
+            //Fetch Dont know sprites
+            for (var i = 0; i < swipeData.dontKnowSpriteName.Length; i++) {
+                if (swipeData.dontKnowSpriteName[i] == null) {
+                    break;
+                }
+                for (var j = 0; j < cardSpritesList.Count; j++)
+                {
+                    if (cardSpritesList[j].name == swipeData.dontKnowSpriteName[i])
+                    {
+                        dontKnowCards.Add(cardSpritesList[j]);
+                    }
+                }
+            }
+
+            if (swipeData.cardSpriteName[0] == null) {
+                cardSprites = dontKnowCards;
+            }
+
+            //Fetch scores
+            IDontKnowScore.text = swipeData.dontKnowScore;
+            IKnowScore.text = swipeData.knowScore;
+            IKnowCounter = int.Parse(swipeData.knowScore);
+
+            InstatiateCards();
+        }
     }
 
     private void CheckDontKnowCards() {
@@ -191,7 +291,9 @@ public class SwipeScript : MonoBehaviour
 
 
     public void CrossClick() {
-        Debug.Log("Clicked cross");
+        for (var i = 0; i < dontKnowSpriteName.Length; i++) {
+            Debug.Log(dontKnowSpriteName[i]);
+        }
         touchCardFlag = false;
         swipeCompleteFlag = false;
         swipeAnimator.SetBool("SwipeLeftFlag", true);
@@ -215,12 +317,14 @@ public class SwipeScript : MonoBehaviour
     }
 
     public void TouchEnterCard() {
-        Destroy(touchIcon);
-        touchIcon = Instantiate(touchIconObj, canvas.transform);
         touchCardFlag = true;
         swipeCompleteFlag = false;
     }
 
     public void TouchExitCard() {
+    }
+
+    public void GoToMainScreen() {
+        SceneManager.LoadScene("MainScreen");
     }
 }
