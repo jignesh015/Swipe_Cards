@@ -210,10 +210,6 @@ public class SwipeScript : MonoBehaviour
             }
         }
 
-        if (cardSpriteName.Length > 0) {
-            Debug.Log(cardSpriteName[0]);
-        }
-
         SaveScript.SaveData(this);
     }
 
@@ -226,12 +222,8 @@ public class SwipeScript : MonoBehaviour
             InstatiateCards();
         }
         else {
-            Debug.Log(swipeData.cardSpriteName.Length);
-            Debug.Log(swipeData.dontKnowSpriteName.Length);
-
             //Fetch cards sprite
             for (var i = 0; i < swipeData.cardSpriteName.Length; i++) {
-                Debug.Log(swipeData.cardSpriteName[i]);
                 if (swipeData.cardSpriteName[i] == null) {
                     break;
                 }
@@ -290,9 +282,6 @@ public class SwipeScript : MonoBehaviour
 
 
     public void CrossClick() {
-        for (var i = 0; i < dontKnowSpriteName.Length; i++) {
-            Debug.Log(dontKnowSpriteName[i]);
-        }
         touchCardFlag = false;
         swipeCompleteFlag = false;
         swipeAnimator.SetBool("SwipeLeftFlag", true);
