@@ -287,6 +287,8 @@ public class SwipeScript : MonoBehaviour
         swipeAnimator.SetBool("SwipeLeftFlag", true);
         swipeAnimator.SetBool("SwipeRightFlag", false);
 
+        frontCardSprite.sprite = crossSprite;
+
         StartCoroutine(SetSwipeDirection("left"));
     }
 
@@ -295,6 +297,8 @@ public class SwipeScript : MonoBehaviour
         swipeCompleteFlag = false;
         swipeAnimator.SetBool("SwipeRightFlag", true);
         swipeAnimator.SetBool("SwipeLeftFlag", false);
+
+        frontCardSprite.sprite = tickSprite;
 
         StartCoroutine(SetSwipeDirection("right"));
     }
