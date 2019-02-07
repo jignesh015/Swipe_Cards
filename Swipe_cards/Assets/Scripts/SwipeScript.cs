@@ -27,7 +27,7 @@ public class SwipeScript : MonoBehaviour
     //Sprite name array
     public string[] cardSpriteName;
     public string[] dontKnowSpriteName;
-
+    public string dontKnowFlag;
 
     //Private game variables
     private Animator swipeAnimator;
@@ -49,17 +49,12 @@ public class SwipeScript : MonoBehaviour
     private bool swipeCompleteFlag = false;
     private int IKnowCounter;
 
-    // Start is called before the first frame update
     void Start()
     {
-        //dontKnowSpriteName = new string[20];
         //Check for saved Data
         CheckSavedData();
-
-        //InstatiateCards();
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (touchCardFlag) {
@@ -70,7 +65,6 @@ public class SwipeScript : MonoBehaviour
                 if (cardTouch.phase == TouchPhase.Began)
                 {
                     swipeStartPos = cardTouch.position;
-                    
                 }
 
                 if (swipeStartPos.x > cardTouch.position.x)
@@ -88,8 +82,6 @@ public class SwipeScript : MonoBehaviour
 
                 }
             }
-
-            
         }
 
         if (!touchCardFlag && !swipeCompleteFlag)
@@ -118,16 +110,8 @@ public class SwipeScript : MonoBehaviour
         }
     }
 
-    //private void LateUpdate()
-    //{
-    //    if (dontKnowCards.Count > 0) {
-    //        dontKnowSpriteName[0] = dontKnowCards[0].name;
-    //    }
-        
-    //}
-
+    //Instatiate the cards that are yet to be marked "I know"
     private void InstatiateCards() {
-
         if (cardSprites.Count > 0)
         {
             if (cardSprites.Count > 1)
@@ -143,9 +127,7 @@ public class SwipeScript : MonoBehaviour
             frontCardPos = frontCard.transform.position;
             frontCardSprite = frontCard.GetComponent<Image>();
             frontCardSprite.sprite = cardSprites[0];
-            
             swipeAnimator = frontCard.GetComponent<Animator>();
-
         }
         else {
             CheckDontKnowCards();
@@ -157,16 +139,13 @@ public class SwipeScript : MonoBehaviour
         swipeDirection = "left";
         swipeAnimator.SetBool("SwipeLeftFlag", true);
         swipeAnimator.SetBool("SwipeRightFlag", false);
-
         frontCardSprite.sprite = crossSprite;
-
     }
 
     private void SwipeRight() {
         swipeDirection = "right";
         swipeAnimator.SetBool("SwipeRightFlag", true);
         swipeAnimator.SetBool("SwipeLeftFlag", false);
-
         frontCardSprite.sprite = tickSprite;
     }
 
@@ -174,18 +153,16 @@ public class SwipeScript : MonoBehaviour
         yield return new WaitForSeconds(0.35f);
 
         touchCardFlag = false;
-
         Destroy(frontCard);
         Destroy(backCard);
-
         cardSprites.RemoveAt(0);
 
         //Update score
         IDontKnowScore.text = dontKnowCards.Count.ToString();
         IKnowScore.text = IKnowCounter.ToString();
 
+        //Save data after every swipe
         UpdateSavedData();
-
         InstatiateCards();
         
     }
@@ -210,18 +187,24 @@ public class SwipeScript : MonoBehaviour
             }
         }
 
+        //After all cards are swiped either "I know" or "I don't know"
+        if (cardSprites.Count == 0) {
+            dontKnowFlag = "allCardsSwiped";
+        }
+
         SaveScript.SaveData(this);
     }
 
     private void CheckSavedData() {
         SavedData swipeData = SaveScript.LoadData();
-        if (swipeData == null)
+        if (swipeData == null)      //If save file doesn't exist
         {
             cardSprites = cardSpritesList;
             IKnowCounter = 0;
+            dontKnowFlag = "cardsRemaining";
             InstatiateCards();
         }
-        else {
+        else {                      //If save file exists
             //Fetch cards sprite
             for (var i = 0; i < swipeData.cardSpriteName.Length; i++) {
                 if (swipeData.cardSpriteName[i] == null) {
@@ -248,14 +231,17 @@ public class SwipeScript : MonoBehaviour
                 }
             }
 
-            if (swipeData.cardSpriteName[0] == null) {
-                cardSprites = dontKnowCards;
+
+            //If all cards are swiped either "I know" or "I don't know", only show the "I don't know" cards
+            if (swipeData.dontKnowFlag == "allCardsSwiped") {
+                cardSprites = new List<Sprite>();
             }
 
             //Fetch scores
             IDontKnowScore.text = swipeData.dontKnowScore;
             IKnowScore.text = swipeData.knowScore;
             IKnowCounter = int.Parse(swipeData.knowScore);
+            dontKnowFlag = swipeData.dontKnowFlag;
 
             InstatiateCards();
         }

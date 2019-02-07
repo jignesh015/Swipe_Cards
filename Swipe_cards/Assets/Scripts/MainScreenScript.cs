@@ -11,18 +11,11 @@ public class MainScreenScript : MonoBehaviour
     public GameObject settingsScreen;
     public GameObject resetSuccessful;
 
-    // Start is called before the first frame update
     void Start()
     {
         mainScreen.SetActive(true);
         characterScreen.SetActive(false);
         settingsScreen.SetActive(false);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     public void GoToMainScreen() {
@@ -56,11 +49,11 @@ public class MainScreenScript : MonoBehaviour
 
     public void ResetGame()
     {
+        //Delete the saved data file
         if (SaveScript.LoadData() != null) {
             string path = Application.persistentDataPath + "/savedData.dat";
             File.Delete(path);
         }
         resetSuccessful.SetActive(true);
-        
     }
 }

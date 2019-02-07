@@ -4,8 +4,6 @@ using UnityEngine;
 
 public static class SaveScript 
 {
-    //private static string path = Application.persistentDataPath + "/swipeData1.dat";
-
     public static void SaveData(SwipeScript swipeData) {
         BinaryFormatter formatter = new BinaryFormatter();
         string path = Application.persistentDataPath + "/savedData.dat";
